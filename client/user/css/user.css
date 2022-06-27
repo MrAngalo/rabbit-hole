@@ -1,0 +1,57 @@
+body {
+	display: table;
+	float: none;
+	margin: 0 auto;
+	text-align: -webkit-center;
+	background: #3a404d;
+}
+
+body #canvas {
+	background: #bba5d0
+}
+
+.overlay {
+	position: fixed;
+	margin: 10px 5px;
+	
+	font-size: 20px;
+	font-family: "Lucida Console";
+	
+	background: #89d8ff94;
+}
+
+.overlay * {
+	width: auto;
+	padding: 0;
+}
+
+.controls {
+	top: 0;
+	
+	width: auto;
+	height: auto;
+}
+
+.wrapper {
+	bottom: 0;
+	
+	width: auto;
+	height: 35px;
+}
+
+.wrapper * {
+	float: left;
+	margin: 5px;
+	height: 25px;
+}
+
+.wrapper input {
+	border: none;
+	background-image: none;
+	
+	-webkit-box-shadow: none;
+	-moz-box-shadow: none;
+	box-shadow: none;
+	
+	background: #ffffff80;
+}

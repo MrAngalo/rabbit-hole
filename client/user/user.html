@@ -1,0 +1,23 @@
+<html>
+	<head>
+		<script src="/socket.io/socket.io.js"></script>
+		<link rel="stylesheet" href="/client/user/css/user.css">
+	</head>
+	<body>
+		<canvas id="canvas"></canvas>
+		<script src="/client/user/js/api.js"></script>
+		<script src="/client/user/js/functions.js"></script>
+		<script src="/client/user/js/main.js"></script>
+		<script src="/client/user/js/respawn.js"></script>
+		<div class="controls overlay">
+			"WASD - Movement"<br>
+			<!--"C - Open Chat"<br>-->
+		</div>
+		<div class="wrapper overlay" id="join_wrapper">
+			<div>Join as</div>
+			<input id="join_nameInput"></input>
+			<button id="join_button">CONNECT</button>
+			<div id="join_connection">Connecting To Server...</div> 
+		</div>
+	</body>	
+</html>
