@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/css/master.css">
+    <script src="/js/master.js" charset="utf-8"></script>
+    <title>Rabbit Search</title>
+  </head>
+  <body>
+    <div class="error"><%= locals.err %></div>
+    <div class="title">
+      <h2>Rabbit Search Game</h2>
+      <p>Explore the paths of others, or create your own</p>
+    </div>
+    <div class="form">
+      <form method="POST" action="/path">
+        <label for="name">Name to label your creations</label><br>
+        <input type="text" id="name" name="name" value="Anonymous"><br>
+        <label for="id">Path Id (optional)</label><br>
+        <input type="text" id="id" name="id" value="0"><br><br>
+        <input type="submit" value="Submit">
+      </form>
+    </div>
+  </body>
+</html>

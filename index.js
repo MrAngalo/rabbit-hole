@@ -1,281 +1,100 @@
-console.log('Loading Functions');
+const express = require('express');
+const bodyParser = require('body-parser');
+const sqlite3 = require('sqlite3').verbose();
+const moment = require("moment");
 
-var api = require('./server/api/api');
-var command = require('./server/api/command');
-
-console.log('Server Initiating');
-
-var express = require('express');
 var app = express();
-var serv = require('http').Server(app);
-
-app.get('/', function(req, res) { res.sendFile(__dirname + '/client/user/user.html'); });
-app.get('/chat', function(req, res) { res.sendFile(__dirname + '/client/chat/chat.html'); });
-app.use('/client', express.static(__dirname + '/client'));
-
 var port = process.env.PORT || 5000;
-serv.listen(port);
+// var serv = require('http').Server(app);
 
-var connection_id = 1000;
-var io = require('socket.io')(serv, { pingInterval: 10000, pingTimeout: 5000 });
-
-console.log('Server Initiated');
-console.log("listening on port: " + port);
-
-var SOCKET_LIST = {};
-var PLAYER_LIST = {};
-var FOOD_LIST = {};
-
-//command.init(api, SOCKET_LIST, PLAYER_LIST, FOOD_LIST)
-
-//////////////////////////////////////
-//			PLAYER CLASS			//
-//////////////////////////////////////
-var Player = function(id, name) {
-    this.id = id;
-    this.name = name;
-	
-    this.randomPosition();
-	this.updateMass(5);
-	
-	this.moveRightRequest = false;
-    this.moveLeftRequest = false;
-    this.moveUpRequest = false;
-    this.moveDownRequest = false;
-}
-
-Player.prototype.tick = function() {
-	this.x += (this.moveRightRequest - this.moveLeftRequest) * this.acceleration;
-	this.y += (this.moveUpRequest - this.moveDownRequest) * this.acceleration;
-	//if (this.moveRightRequest) {
-	//	this.x += this.acceleration;
-	//}
-	//if (this.moveLeftRequest) {
-	//	this.x -= this.acceleration;
-	//}
-	//if (this.moveUpRequest) {
-	//	this.y += this.acceleration;
-	//}
-	//if (this.moveDownRequest) {
-	//	this.y -= this.acceleration;
-	//}
-}
-
-Player.prototype.randomPosition = function() {
-	this.x = Math.getRandomInt(api.GAME_MIN_X + 5, api.GAME_MAX_X - 5);
-	this.y = Math.getRandomInt(api.GAME_MIN_Y + 5, api.GAME_MAX_Y - 5);
-}
-
-Player.prototype.updateMass = function(mass) {
-	this.mass = mass;
-	this.radius = 3*Math.sqrt(mass);
-	this.acceleration = 3*Math.exp(-0.01*mass) + 3;
-}
-
-Player.prototype.eat = function(food) {
-	food.respawning = true;
-	food.randomPosition();
-	
-	this.updateMass(this.mass + food.mass);
-	
-	setTimeout(function() {
-		food.respawning = false;
-	}, 750);
-}
-
-Player.prototype.emit = function(name, data) {
-	SOCKET_LIST[this.id].emit(name, data);
-}
-
-//////////////////////////////////
-//			FOOD CLASS			//
-//////////////////////////////////
-var Food = function(id) {
-	this.id = id;
-	
-	this.randomPosition();
-	this.mass = 2;
-	this.radius = 4;
-	
-	this.respawning = false;
-}
-
-Food.prototype.randomPosition = function() {
-	this.x = Math.getRandomInt(api.GAME_MIN_X + 5, api.GAME_MAX_X - 5);
-	this.y = Math.getRandomInt(api.GAME_MIN_Y + 5, api.GAME_MAX_Y - 5);
-}
-
-for (i = 0; i < api.GAME_MAX_FOOD; i++) {
-	FOOD_LIST[i] = new Food(i);
-}
-
-io.sockets.on('connection', function(socket) {
-	
-	socket.id = connection_id++;
-	SOCKET_LIST[socket.id] = socket;
-	console.log('client id-' + socket.id + ' connected to the server');
-	
-	socket.on('disconnect', function(data) {
-		console.log('client id-' + socket.id + ' disconected from the server')
-		delete SOCKET_LIST[socket.id];
-		delete PLAYER_LIST[socket.id];
-	});
-	
-	socket.on('joinRequest', function(data) {
-		
-		var nameLen = data.name.length;
-		if (2 > nameLen || nameLen > 16) {
-			socket.emit('joinFailed', { reason: "usernames must be between 2 and 16 characters"});
-			return;
-		}
-		
-		var nameRegex = /^[a-zA-Z0-9_!@#$%]+$/;
-		if (!nameRegex.test(data.name)) {
-			socket.emit('joinFailed', { reason: "usernames must only contain letters, numbers, and !@#$%"});
-			return;
-		}
-		
-		var lowerCase = data.name.toLowerCase();
-		if (lowerCase.includes("zuhayer") || lowerCase.includes("zoohired") || lowerCase == "zu" || lowerCase == "zoo") {
-			socket.emit('joinFailed', { reason: "you are not Zuhayer"});
-			return;
-		}
-		
-		var player = new Player(socket.id, data.name);
-        PLAYER_LIST[socket.id] = player;
-		
-		console.log('client id-' + socket.id + ' joined as '+ player.name);
-		socket.emit('joinSuccessful', data);
-		
-	});
-		
-	socket.on('movementRequest', function(data) {
-		var player = PLAYER_LIST[socket.id];
-		if (!player) // there is no player
-			return;
-		
-		switch (data.inputId) {
-			case 'up':
-				player.moveUpRequest = !!data.stats
-				break;
-			case 'down':
-				player.moveDownRequest = !!data.stats
-				break;
-			case 'left':
-				player.moveLeftRequest = !!data.stats
-				break;
-			case 'right':
-				player.moveRightRequest = !!data.stats
-				break;
-		}
-	});
-	
-	//socket.on('chatMessageSent', function(data) {
-	//	var player = PLAYER_LIST[socket.id];
-	//	if (!player) // there is no player
-	//		return;
-	//	
-	//	if (data.message.startsWith('/')) {
-	//		var cmd = data.message.substr(1).toLowerCase();
-	//		
-	//		var arguments = cmd.split(' ');
-	//		var label = arguments.splice(0, 1)[0];
-	//		
-	//		if (command.execute(label, arguments, player, socket)) {
-	//			console.log(player.name + 'of id-' + socket.id + 'just executed /' + cmd);
-	//		}
-	//		return;
-	//	}
-	//	
-	//	for (var i in PLAYER_LIST) {
-	//		var s = SOCKET_LIST[i];
-	//		socket.emit('chatMessageReceived', { sender: player.name, message: data.message });
-	//	}
-	//});
+const db = new sqlite3.Database('./database/main.db', sqlite3.OPEN_READWRITE, (err) => {
+  if (err) return console.log(err.message);
 });
 
-function tick() {
-	
-    for (var i in PLAYER_LIST) {
-		var player = PLAYER_LIST[i];
-		player.tick();
-	}
-	
-	/*********************/
-	/*calculate collision*/
-	/*********************/
-	var eattenPlayers = [];
-	
-	var ids = Object.keys(PLAYER_LIST);
-	for (var i = 0; i < ids.length; i++) {
-		var player = PLAYER_LIST[ids[i]];
-		
-		for (var k in FOOD_LIST) {
-			var food = FOOD_LIST[k];
-			
-			var dx = player.x - food.x;
-			var dy = player.y - food.y;
-			
-			var distSqr = dx*dx+dy*dy;
-			var radSqr = player.radius * player.radius;
-			
-			if (!food.respawning && radSqr > distSqr) { //food collision
-				player.eat(food);
-				player.emit('playerEatsFood', {player: player, food: food});
-			}
-		}
-		
-		for (var j = i+1; j < ids.length; j++) {
-			
-			var player2 = PLAYER_LIST[ids[j]];
-			
-			var dx = player.x - player2.x;
-			var dy = player.y - player2.y;
-			var distSqr = dx*dx+dy*dy;
-			
-			var combRad = player.radius - player2.radius;
-			var combRadSqr = combRad*combRad; //always positive
-			
-			if (combRadSqr > distSqr) { //true if either player is inside another
-			
-				//the closer the ratio is to 1, the lesser disparity between the player masses
-				//player can only eat another if there is enough disparity
-				var ratio = player.mass / player2.mass;
-				if (ratio >= api.EAT_PLAYER_RATIO) {
-					
-					eattenPlayers.push(player2);
-					var data = {attacker: player, victim: player2};
-					player.emit('playerEatsOther', data);
-					player2.emit('otherEatsPlayer', data);
-					
-				} else if (ratio <= api.EAT_PLAYER_RATIO_INV) {
-					
-					eattenPlayers.push(player);
-					var data = {attacker: player2, victim: player};
-					player.emit('otherEatsPlayer', data);
-					player2.emit('playerEatsOther', data);
-				}	
-			}
-		}
-	}
-	
-	/***********************/
-	/*process eaten players*/
-	/***********************/
-	for (var i = 0; i < eattenPlayers.length; i++) {
-		var player = eattenPlayers[i];
-		delete PLAYER_LIST[player.id];
-	}
-}
+// const db_insert = 'INSERT INTO branches ('
+//   + '_id, parent_id, creator_id, snippet,'
+//   + 'tenor_gif, body, is_leaf, rating_pos, rating_neg, creation_time_epoch) '
+//   + 'VALUES(?,?,?,?,?,?,?,?,?,?)';
 
-function render() {
-    for (var i in SOCKET_LIST) {
-        var socket = SOCKET_LIST[i];
-        socket.emit('render', { PLAYER_LIST: PLAYER_LIST, FOOD_LIST: FOOD_LIST });
+// db.run(db_insert, [1, 1, "The First", "The First", "https://c.tenor.com/y-mhvsb2nTMAAAAd/nice-day-our-earth.gif", "You are lost<br>You see a tree, a rock, and a waterfall on the distance<br>What do you do?", 0, 69000, 0, new Date().getTime()], (err) => {
+//   if (err) return console.log(err.message);
+//
+//   console.log("a new row has been created");
+// });
+
+
+app.set('view engine', 'ejs');
+
+app.use('/public', express.static(__dirname + '/public'));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use((req, res, next)=>{
+  res.locals.moment = moment;
+  next();
+});
+
+// res.render("path", {text: "hello"});
+//<%= text %>
+//<% locals.text || 'Default' %>
+app.get(['/', '/path'], function(req, res) {
+  res.render("home");
+});
+
+app.post('/path', function (req, res) {
+  var user = req.body.name || "Anonymous";
+  var id = req.body.id || 0;
+
+  if (user.length > 15) {
+    res.render("home", { err: `Error: user cannot exceed 15 characters!`});
+    return;
+  }
+
+  if (isNaN(Number(id) || Number(id) < 0)) {
+    res.render("home", { err: `Error: path id=${id} does not exist!`});
+    return;
+  }
+
+  db.all('SELECT * FROM branches WHERE _id = ?', [id], function(err, rows) {
+    if (err) return console.log(err.message);
+    if (rows.length == 0) {
+      res.render("home", { err: `Error: path id=${id} does not exist!`});
+      return;
     }
-}
 
-setInterval(function() {
-    tick();
-    render();
-}, 1000 / 30);
+    var path = rows[0];
+
+    //snippets with id equal to their parent is a flag to create paths
+    var default_snippet = {_id: path._id, snippet: "Create your action"};
+    var return_snippet = {_id: path.parent_id, snippet: "Go Back!"};
+    var snippets = [ default_snippet, default_snippet, default_snippet];
+
+    //only add return snippet if path is not root
+    if (path._id != 0) snippets.push(return_snippet);
+
+    var query_ids = [
+      path.child_1_id || -1,
+      path.child_2_id || -1,
+      path.child_3_id || -1
+    ];
+
+    db.all('SELECT _id,snippet FROM branches WHERE _id IN (?,?,?)', query_ids, function(err2, rows2) {
+      if (err2) return console.log(err.message);
+      for (var i = 0; i < rows2.length; i++) {
+        snippets[i] = rows2[i];
+      }
+
+      res.render("path", { user: user, path: path, snippets: snippets});
+    });
+  });
+});
+
+
+// app.post('/login', function (req, res) {
+//   res.send('welcome, ' + req.body.name);
+// })
+
+app.listen(port);
+console.log(`Server running on port ${port}`);
+
+// db.close(sqlite3.OPEN_READWRITE, (err) => {
+//   if (err) return console.log(err.message);
+// });
