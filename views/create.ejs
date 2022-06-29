@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Rabbit Search</title>
+  </head>
+  <body>
+    <div class="title">
+      <h2>Create an action that continues the chain</h2>
+      <div><%= path.snippet %></div>
+      <div>Created by: <%= path.creator_id %></div>
+      <div>Created on: <%= moment(new Date(path.creation_time_epoch)).format('Do MMMM, YYYY') %></div>
+    </div>
+    <div class="previous_body">
+      <p>
+      <% var lines = path.body.split("\\n"); for (var i = 0; i < lines.length; i++) { %>
+        <div><%= lines[i] %></div>
+      <% } %>
+      </p>
+    </div>
+    <div class="">
+      <form method="POST" action="/create">
+        <input type="hidden" name="parent_id" value="<%= path._id %>">
+        <input type="hidden" name="creator_id" value="<%= user %>">
+
+        <label for="snippet">Give your action a short description -- shows on choices (max 40 chars)</label><br>
+        <input type="text" id="snippet" name="snippet" placeholder="Snap the Gauntlet"><br>
+
+        <label for="body">Describe how the story continues -- write it in 2nd person perspective (max 3000 chars)</label><br>
+        <textarea id="body" name="body" placeholder="You decided to..."></textarea><br>
+
+        <label for="body">Embed a <a href="https://tenor.com/" target="_blank">tenor.com</a> gif</label><br>
+        <input type="text" id="body" name="body" placeholder="https://c.tenor.com/_-ntE-EG2aUAAAAd/falling-waffle-waffle.gif" onkeydown="document.getElementById('image').src=this.value"><br>
+        <div>Instructions to get the proper url (c.tenor.com)</div>
+        <ol>
+          <li>Go to <a href="https://tenor.com/" target="_blank">tenor.com</a> and find a gif that you like</li>
+          <li>Right-click the gif and select "Open Image in New Tab"</li>
+          <li>The page should change and surrounding elements should disapear to only reveal the gif</li>
+          <li>Copy the whole url, it should begin with <b style="color:green">https://c.tenor.com</b> and end with <b style="color:green">.gif</b></li>
+          <li>Paste the url above, the gif should appear below to confirm that it works</li>
+        </ol>
+        <div>
+          <p>
+            <img id="image" width="400px">
+          </p>
+        </div>
+        <input type="checkbox" id="is_leaf" name="is_leaf" value="1">
+        <label for="vehicle1">End this chain (finale) -- <b style="color:darkred">[warning]</b> if ticked, no one can expand on this chain!</label><br><br>
+        <input type="submit" value="Submit">
+        <div><b style="color:darkred">Important:</b> there is no undo, double check grammar (c.tenor.com)</div>
+      </form>
+    </div>
+  </body>
+</html>

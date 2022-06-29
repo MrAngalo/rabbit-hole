@@ -42,6 +42,7 @@ app.get(['/', '/path'], function(req, res) {
 app.post('/path', function (req, res) {
   var user = req.body.name || "Anonymous";
   var id = req.body.id || 0;
+  var prev_id = req.body.prev_id;
 
   if (user.length > 15) {
     res.render("home", { err: `Error: user cannot exceed 15 characters!`});
@@ -62,7 +63,12 @@ app.post('/path', function (req, res) {
 
     var path = rows[0];
 
-    //snippets with id equal to their parent is a flag to create paths
+    //flag to create a new branch
+    if (prev_id == id) {
+      res.render("create", {user: user, path: path});
+      return;
+    }
+    //snippets with id equal to their parent is a flag to a create new branch
     var default_snippet = {_id: path._id, snippet: "Create your action"};
     var return_snippet = {_id: path.parent_id, snippet: "Go Back!"};
     var snippets = [ default_snippet, default_snippet, default_snippet];
@@ -86,11 +92,6 @@ app.post('/path', function (req, res) {
     });
   });
 });
-
-
-// app.post('/login', function (req, res) {
-//   res.send('welcome, ' + req.body.name);
-// })
 
 app.listen(port);
 console.log(`Server running on port ${port}`);
