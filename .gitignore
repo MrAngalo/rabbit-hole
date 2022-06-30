@@ -1,3 +1,2 @@
 database/*
-database/main.db
-database/main.db-journal
+node_modules/*
