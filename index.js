@@ -3,7 +3,6 @@ const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
 const aasqlite = require("./my_modules/aa-sqlite/aasqlite");
 const moment = require("moment");
-const os = require('os');
 
 async function mainApp() {
 
@@ -50,13 +49,6 @@ async function mainApp() {
   app.set('view engine', 'ejs');
 
   app.use('/public', express.static(__dirname + '/public'));
-  app.use(function(req, res, next) {
-    //does not force https on localhost (for debug)
-    if ((req.get('X-Forwarded-Proto') !== 'https') && os.hostname().indexOf("local") != -1) {
-      res.redirect('https://' + req.get('Host') + req.url);
-    } else
-      next();
-  });
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use((req, res, next)=>{
     res.locals.moment = moment;

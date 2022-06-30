@@ -25,13 +25,13 @@
         <input type="hidden" name="creator_id" value="<%= user %>">
 
         <label for="snippet">Give your action a short description -- shows on choices (max 40 chars)</label><br>
-        <input type="text" id="snippet" name="snippet" placeholder="Snap the Gauntlet"><br>
+        <input type="text" id="snippet" name="snippet" placeholder="Snap the Gauntlet" value="<%= (locals.current_path || {}).snippet %>"><br>
 
         <label for="body">Describe how the story continues -- write it in 2nd person perspective (max 3000 chars)</label><br>
-        <textarea id="body" name="body" placeholder="You decided to..."></textarea><br>
+        <textarea id="body" name="body" placeholder="You decided to..."><%= (locals.current_path || {}).body %></textarea><br>
 
         <label for="tenor_gif">Embed a <a href="https://tenor.com/" target="_blank">tenor.com</a> gif</label><br>
-        <input type="text" id="tenor_gif" name="tenor_gif" placeholder="https://c.tenor.com/_-ntE-EG2aUAAAAd/falling-waffle-waffle.gif" onkeydown="document.getElementById('image').src=this.value"><br>
+        <input type="text" id="tenor_gif" name="tenor_gif" placeholder="https://c.tenor.com/_-ntE-EG2aUAAAAd/falling-waffle-waffle.gif" onkeydown="document.getElementById('image').src=this.value" value="<%= (locals.current_path || {}).tenor_gif %>"><br>
         <div>Instructions to get the proper url (c.tenor.com)</div>
         <ol>
           <li>Go to <a href="https://tenor.com/" target="_blank">tenor.com</a> and find a gif that you like</li>
@@ -45,7 +45,7 @@
             <img id="image" width="400px">
           </p>
         </div>
-        <input type="checkbox" id="is_leaf" name="is_leaf" value="1">
+        <input type="checkbox" id="is_leaf" name="is_leaf" value="1" <%= ((locals.current_path || {}).is_leaf == 1) ? "checked" : "" %>>
         <label for="is_leaf">End this chain (finale) -- <b style="color:darkred">[warning]</b> if ticked, no one can expand on this chain!</label><br><br>
         <input type="submit" value="Submit">
         <div><b style="color:darkred">Important:</b> there is no undo, double check grammar (c.tenor.com)</div>
