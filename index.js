@@ -211,7 +211,9 @@ async function mainApp() {
   console.log(`Server running on port ${port}`);
 }
 
-mainApp();
+mainApp().catch((error) => {
+  console.error(error);
+});;
 
 // db.close(sqlite3.OPEN_READWRITE, (err) => {
 //   if (err) return console.log(err.message);
