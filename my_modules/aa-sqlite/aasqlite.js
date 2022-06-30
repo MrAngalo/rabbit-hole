@@ -1,7 +1,7 @@
 const sqlite3 = require('sqlite3').verbose();
 
 exports.open=function(path, flag) {
-    return new Promise(function(resolve) {
+    return new Promise(function(resolve, reject) {
     var db = new sqlite3.Database(path, flag, function(err) {
             if(err) reject("Open error: "+ err.message);
             else    resolve(db);
