@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
-const aasqlite = require("aa-sqlite");
+const aasqlite = require("./my_modules/aa-sqlite/aasqlite");
 const moment = require("moment");
 
 async function mainApp() {
