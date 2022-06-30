@@ -72,7 +72,7 @@ async function mainApp() {
         return `Error: user cannot exceed 15 characters!`;
 
       if (isNaN(Number(id)) || Number(id) < 0 || Number(id) >= global_path_count)
-        return `Error: path id=${id} must be a whole number!`;
+        return `Error: path id=${id} does not exist!`;
 
       //success, no errors
       return null;
