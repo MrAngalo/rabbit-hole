@@ -10,7 +10,7 @@ async function mainApp() {
   var app = express();
   var port = process.env.PORT || 5000;
 
-  await fs.promises.mkdir("/database", { recursive: true })
+  await fs.promises.mkdir("./database", { recursive: true })
 
   const db = await aasqlite.open('./database/main.db', sqlite3.OPEN_READWRITE);
   //create table branches if does not exist
