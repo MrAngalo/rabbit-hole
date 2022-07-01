@@ -51,7 +51,7 @@ async function mainApp() {
   // var global_path_count = Object.values(await aasqlite.get(db, "SELECT COALESCE(MAX(_id)+1, 0) FROM branches"))[0];
   var global_path_count = (await client.query(`SELECT COALESCE(MAX(_id)+1, 0) FROM branches`)).rows[0].coalesce;
 
-  console.log("Total paths: "global_path_count);
+  console.log("Total paths: "+global_path_count);
 
   // const db_insert = 'INSERT INTO branches ('
   //   + '_id, parent_id, creator_id, snippet,'
