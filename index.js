@@ -111,7 +111,7 @@ async function mainApp() {
       return;
     }
     //snippets with id equal to their parent is a flag to a create new branch
-    var default_snippet = {_id: current_path._id, snippet: "[Empty Splot] Create your action"};
+    var default_snippet = {_id: current_path._id, snippet: "[Empty Slot] Create your action"};
     var return_snippet = {_id: current_path.parent_id, snippet: "Go Back!"};
 
     var snippets = [ default_snippet, default_snippet, default_snippet];
@@ -206,7 +206,7 @@ async function mainApp() {
     var current_path = (await client.query('SELECT * FROM branches WHERE _id = $1', [current_id])).rows[0];
 
     //snippets with id equal to their parent is a flag to a create new branch
-    var default_snippet = {_id: current_path._id, snippet: "[Empty Splot] Create your action"};
+    var default_snippet = {_id: current_path._id, snippet: "[Empty Slot] Create your action"};
     var return_snippet = {_id: current_path.parent_id, snippet: "Go Back!"};
 
     var snippets = [ default_snippet, default_snippet, default_snippet];
