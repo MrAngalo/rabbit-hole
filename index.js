@@ -1,44 +1,57 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const sqlite3 = require('sqlite3').verbose();
-const aasqlite = require("./my_modules/aa-sqlite/aasqlite");
 const moment = require("moment");
 const fs = require('fs');
+require('dotenv').config();
+// const sqlite3 = require('sqlite3').verbose();
+// const aasqlite = require("./my_modules/aa-sqlite/aasqlite");
+
+const { Pool } = require('pg');
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
 async function mainApp() {
 
   var app = express();
   var port = process.env.PORT || 5000;
 
-  if (!fs.existsSync("./database")) {
-    fs.mkdirSync("./database");
-    fs.copyFileSync("./template.db", "./database/main.db");
-  }
+  // if (!fs.existsSync("./database")) {
+  //   fs.mkdirSync("./database");
+  //   fs.copyFileSync("./template.db", "./database/main.db");
+  // }
 
-  const db = await aasqlite.open('./database/main.db', sqlite3.OPEN_READWRITE);
+  // const db = await aasqlite.open('./database/main.db', sqlite3.OPEN_READWRITE);
   //create table branches if does not exist
-  await aasqlite.run(db, ''
-    +'CREATE TABLE IF NOT EXISTS "branches" ('
-    +'"_id"	INTEGER,'
-    +'"parent_id"	INTEGER NOT NULL,'
-    +'"child_1_id"	INTEGER,'
-    +'"child_2_id"	INTEGER,'
-    +'"child_3_id"	INTEGER,'
-    +'"creator_id"	TEXT,'
-    +'"snippet"	TEXT NOT NULL,'
-    +'"body"	TEXT NOT NULL,'
-    +'"tenor_gif"	TEXT NOT NULL,'
-    +'"is_leaf"	INTEGER NOT NULL,'
-    +'"rating_pos"	INTEGER,'
-    +'"rating_neg"	INTEGER,'
-    +'"creation_time_epoch"	INTEGER,'
-    +'PRIMARY KEY("_id" AUTOINCREMENT)'
-    +');'
-  );
+  // await aasqlite.run(db, ''
+  //   +'CREATE TABLE IF NOT EXISTS "branches" ('
+  //   +'"_id"	INTEGER,'
+  //   +'"parent_id"	INTEGER NOT NULL,'
+  //   +'"child_1_id"	INTEGER,'
+  //   +'"child_2_id"	INTEGER,'
+  //   +'"child_3_id"	INTEGER,'
+  //   +'"creator_id"	TEXT,'
+  //   +'"snippet"	TEXT NOT NULL,'
+  //   +'"body"	TEXT NOT NULL,'
+  //   +'"tenor_gif"	TEXT NOT NULL,'
+  //   +'"is_leaf"	INTEGER NOT NULL,'
+  //   +'"rating_pos"	INTEGER,'
+  //   +'"rating_neg"	INTEGER,'
+  //   +'"creation_time_epoch"	INTEGER,'
+  //   +'PRIMARY KEY("_id" AUTOINCREMENT)'
+  //   +');'
+  // );
 
-  var global_path_count = Object.values(await aasqlite.get(db, "SELECT COALESCE(MAX(_id)+1, 0) FROM branches"))[0];
+  //connects to database
+  const client = await pool.connect();
 
-  console.log("Total paths: "+global_path_count);
+  // var global_path_count = Object.values(await aasqlite.get(db, "SELECT COALESCE(MAX(_id)+1, 0) FROM branches"))[0];
+  var global_path_count = (await client.query(`SELECT COALESCE(MAX(_id)+1, 0) FROM branches`)).rows[0].coalesce;
+
+  console.log("Total paths: "global_path_count);
 
   // const db_insert = 'INSERT INTO branches ('
   //   + '_id, parent_id, creator_id, snippet,'
@@ -89,7 +102,8 @@ async function mainApp() {
       return;
     }
 
-    var current_path = await aasqlite.get(db, 'SELECT * FROM branches WHERE _id = ?', [id]);
+    // var current_path = await aasqlite.get(db, 'SELECT * FROM branches WHERE _id = ?', [id]);
+    var current_path = (await client.query('SELECT * FROM branches WHERE _id = $1', [id])).rows[0];
 
     //flag to create a new branch
     if (prev_id == id) {
@@ -103,8 +117,11 @@ async function mainApp() {
     var snippets = [ default_snippet, default_snippet, default_snippet];
     if (current_path._id != 0) snippets.push(return_snippet); //only add return snippet if path is not root
 
-    var snippets_fetched = await aasqlite.all(db, 'SELECT _id,snippet FROM branches WHERE _id IN (?,?,?)', [
-      current_path.child_1_id || -1, current_path.child_2_id || -1, current_path.child_3_id || -1 ]);
+    // var snippets_fetched = await aasqlite.all(db, 'SELECT _id,snippet FROM branches WHERE _id IN (?,?,?)', [
+    //   current_path.child_1_id || -1, current_path.child_2_id || -1, current_path.child_3_id || -1 ]);
+
+    var snippets_fetched = (await client.query('SELECT _id,snippet FROM branches WHERE _id IN ($1,$2,$3)', [
+      current_path.child_1_id || -1, current_path.child_2_id || -1, current_path.child_3_id || -1 ])).rows;
 
     for (var i = 0; i < snippets_fetched.length; i++)
       snippets[i] = snippets_fetched[i];
@@ -127,8 +144,6 @@ async function mainApp() {
                 .replace(/[\r\n\t\f\v]{3,}/g, '\\n\\n').replace(/[\r\n\t\f\v]+/g, '\\n');
     tenor_gif = tenor_gif.trim().replace(/\s{2,}/g, ' ');
 
-    console.log(body);
-
     var parent_path;
     var free_child;
 
@@ -136,7 +151,8 @@ async function mainApp() {
       if (isNaN(Number(parent_id)) || Number(parent_id) < 0  || Number(parent_id) >= global_path_count)
         parent_id = "0"; //not an error because parent_path must exist for error page to load
 
-      parent_path = await aasqlite.get(db, 'SELECT * FROM branches WHERE _id = ?', [parent_id]);
+      // parent_path = await aasqlite.get(db, 'SELECT * FROM branches WHERE _id = ?', [parent_id]);
+      parent_path = (await client.query('SELECT * FROM branches WHERE _id = $1', [parent_id])).rows[0];
 
       if (snippet == "" || body == "" || tenor_gif == "")
         return `Error: At least one of the fields is empty!`;
@@ -176,12 +192,18 @@ async function mainApp() {
 
     //inserts new path on database and update parent's child entry
     var values = [current_id, parent_id, user, snippet, body, tenor_gif, is_leaf, now];
-    await aasqlite.run(db, 'INSERT INTO branches (_id, parent_id,creator_id,snippet,body,tenor_gif,is_leaf,creation_time_epoch) VALUES(?,?,?,?,?,?,?,?);', values);
-    await aasqlite.run(db, `UPDATE branches SET ${free_child} = ? WHERE _id = ?`, [current_id, parent_id]);
+
+    // await aasqlite.run(db, 'INSERT INTO branches (_id, parent_id,creator_id,snippet,body,tenor_gif,is_leaf,creation_time_epoch) VALUES(?,?,?,?,?,?,?,?);', values);
+    // await aasqlite.run(db, `UPDATE branches SET ${free_child} = ? WHERE _id = ?`, [current_id, parent_id]);
+    await client.query('INSERT INTO branches (_id, parent_id,creator_id,snippet,body,tenor_gif,is_leaf,creation_time_epoch) VALUES($1,$2,$3,$4,$5,$6,$7,$8);', values);
+    await client.query(`UPDATE branches SET ${free_child} = $1 WHERE _id = $2`, [current_id, parent_id]);
+
+
     console.log(`Created path=${current_id}: ${snippet}`);
 
     //sends user to parent path
-    var current_path = await aasqlite.get(db, 'SELECT * FROM branches WHERE _id = ?', [current_id]);
+    // var current_path = await aasqlite.get(db, 'SELECT * FROM branches WHERE _id = ?', [current_id]);
+    var current_path = (await client.query('SELECT * FROM branches WHERE _id = $1', [current_id])).rows[0];
 
     //snippets with id equal to their parent is a flag to a create new branch
     var default_snippet = {_id: current_path._id, snippet: "Create your action"};
@@ -190,8 +212,10 @@ async function mainApp() {
     var snippets = [ default_snippet, default_snippet, default_snippet];
     if (current_path._id != 0) snippets.push(return_snippet); //only add return snippet if path is not root
 
-    var snippets_fetched = await aasqlite.all(db, 'SELECT _id,snippet FROM branches WHERE _id IN (?,?,?)', [
-      current_path.child_1_id || -1, current_path.child_2_id || -1, current_path.child_3_id || -1 ]);
+    // var snippets_fetched = await aasqlite.all(db, 'SELECT _id,snippet FROM branches WHERE _id IN (?,?,?)', [
+    //   current_path.child_1_id || -1, current_path.child_2_id || -1, current_path.child_3_id || -1 ]);
+    var snippets_fetched = (await client.query('SELECT _id,snippet FROM branches WHERE _id IN ($1,$2,$3)', [
+      current_path.child_1_id || -1, current_path.child_2_id || -1, current_path.child_3_id || -1 ])).rows;
 
     for (var i = 0; i < snippets_fetched.length; i++)
       snippets[i] = snippets_fetched[i];
@@ -202,7 +226,8 @@ async function mainApp() {
 
   process.on('exit', function(code) {
     console.log("Shutting down server...");
-    db.close();
+    client.release();
+    // db.close();
     console.log("Database saved!");
   });
 
