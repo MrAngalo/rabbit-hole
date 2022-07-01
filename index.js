@@ -1,9 +1,20 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const sqlite3 = require('sqlite3').verbose();
-const aasqlite = require("./my_modules/aa-sqlite/aasqlite");
+// const sqlite3 = require('sqlite3').verbose();
+// const aasqlite = require("./my_modules/aa-sqlite/aasqlite");
 const moment = require("moment");
 const fs = require('fs');
+require('dotenv').config();
+
+const { Pool } = require('pg');
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+
 
 async function mainApp() {
 
