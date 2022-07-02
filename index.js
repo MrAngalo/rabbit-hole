@@ -78,7 +78,7 @@ async function mainApp() {
   //<%= text %>
   //<% locals.text || 'Default' %>
   app.get(['/', '/path', '/create'], function(req, res) {
-    res.render("home");
+    res.render("home", {global_path_count: global_path_count});
   });
 
   app.post('/path', async function (req, res) {
@@ -98,7 +98,7 @@ async function mainApp() {
     })();
 
     if (error != null) {
-      res.render("home", { err: error});
+      res.render("home", { err: error, global_path_count: global_path_count});
       return;
     }
 
