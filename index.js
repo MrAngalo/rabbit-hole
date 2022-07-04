@@ -164,7 +164,10 @@ async function mainApp() {
         return `Error: Body length must be between 80 and 3000 characters!`;
 
       if (!tenor_gif.startsWith("https://c.tenor.com") || !tenor_gif.endsWith(".gif"))
-        return `Error: Tenor Gif is invalid (source must be from tenor.com)`;
+        return `Error: Tenor Gif is invalid! (source must be from tenor.com)`;
+
+      if (parent_path.is_leaf == 1)
+        return `Error: The parent path cannot be continued! (it was a finale)`;
 
       var has_free_child = (function() {
         for (var i = 1; i <= 3; i++) {

@@ -9,7 +9,7 @@
     <div class="title">
       <h2><%= path.snippet %></h2>
       <div>Created by: <%= path.creator_id %></div>
-      <div>Created on: <%= moment(new Date(path.creation_time_epoch)).format('Do MMMM, YYYY') %></div>
+      <div>Created on: <%= moment(new Date(parseInt(path.creation_time_epoch))).format('Do MMMM, YYYY') %></div>
     </div>
     <div>
       <p>
@@ -22,15 +22,18 @@
         <div><%= lines[i] %></div>
       <% } %>
       </p>
+      <% if (path.is_leaf) { %>
+        <h2>The End</h2>
+      <% } %>
     </div>
     <div class="snippets">
       <form id="form" method="post" action="/path">
         <input type="hidden" name="name" value="<%= user %>">
         <input type="hidden" name="prev_id" value="<%= path._id %>">
-        <% for (var i = 0; i < snippets.length; i++) { %>
-          <input type="radio" id="rbtn<%= i %>" name="id" value="<%= snippets[i]._id %>" onclick="document.getElementById('form').submit();">
-          <label for="rbtn<%= i %>"><%= snippets[i].snippet %></label><br>
-        <% } %>
+          <% for (var i = path.is_leaf * 3; i < snippets.length; i++) { %>
+            <input type="radio" id="rbtn<%= i %>" name="id" value="<%= snippets[i]._id %>" onclick="document.getElementById('form').submit();">
+            <label for="rbtn<%= i %>"><%= snippets[i].snippet %></label><br>
+          <% } %>
       </form>
     </div>
     <div>
