@@ -344,23 +344,6 @@ function mainApp() {
                             });
                         });
                     });
-                    //   console.log(`Created path=${current_id}: ${snippet}`);
-                    //   //sends user to parent path
-                    //   // var current_path = await aasqlite.get(db, 'SELECT * FROM branches WHERE _id = ?', [current_id]);
-                    //   var current_path = (await client.query('SELECT * FROM branches WHERE _id = $1', [current_id])).rows.pop();
-                    //   //snippets with id equal to their parent is a flag to a create new branch
-                    //   var default_snippet = {_id: current_path._id, snippet: "[Empty Slot] Create your action"};
-                    //   var return_snippet = {_id: current_path.parent_id, snippet: "Go Back!"};
-                    //   var snippets = [ default_snippet, default_snippet, default_snippet];
-                    //   if (current_path._id != 0) snippets.push(return_snippet); //only add return snippet if path is not root
-                    //   // var snippets_fetched = await aasqlite.all(db, 'SELECT _id,snippet FROM branches WHERE _id IN (?,?,?)', [
-                    //   //   current_path.child_1_id || -1, current_path.child_2_id || -1, current_path.child_3_id || -1 ]);
-                    //   var snippets_fetched = (await client.query('SELECT _id,snippet FROM branches WHERE _id IN ($1,$2,$3)', [
-                    //     current_path.child_1_id || -1, current_path.child_2_id || -1, current_path.child_3_id || -1 ])).rows;
-                    //   for (var i = 0; i < snippets_fetched.length; i++)
-                    //     snippets[i] = snippets_fetched[i];
-                    //   res.render("path", { user: user, path: current_path, snippets: snippets});
-                    // });
                     process.on('exit', function (code) {
                         console.log("Shutting down server...");
                         client.release();
@@ -371,7 +354,6 @@ function mainApp() {
                     process.on("SIGINT", function () {
                         process.exit();
                     });
-                    // tty.setRawMode(true);
                     app.listen(port);
                     console.log("Server running on port " + port);
                     return [2 /*return*/];
@@ -383,6 +365,3 @@ mainApp()["catch"](function (error) {
     console.error(error);
 });
 ;
-// db.close(sqlite3.OPEN_READWRITE, (err) => {
-//   if (err) return console.log(err.message);
-// });
