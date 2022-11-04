@@ -1,46 +1,34 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-  <head>
-    <meta charset="utf-8">
-    <title></title>
-  </head>
-  <body>
-    <div class="error"><%= locals.err %></div>
-    <div class="title">
-      <h2><%= path.snippet %></h2>
-      <div>Created by: <%= path.creator_id %></div>
-      <div>Created on: <%= moment(new Date(parseInt(path.creation_time_epoch))).format('Do MMMM, YYYY') %></div>
-    </div>
-    <div>
-      <p>
-        <img src="<%= locals.path.tenor_gif %>" width="400px">
-      </p>
-    </div>
-    <div class="body">
-      <p>
-      <% var lines = path.body.split("\\n"); for (var i = 0; i < lines.length; i++) { %>
-        <div><%= lines[i] %></div>
+<div class="error"><%= locals.err %></div>
+<div class="title">
+  <div><h1><%= path.snippet %></h1></div>
+  <div>Created by: <%= path.creator_name %></div>
+  <div>Created on: <%= moment(new Date(parseInt(path.creation_time_epoch))).format('Do MMMM, YYYY') %></div>
+</div>
+<div class="description-wrapper">
+  <div class="rabbit-gif-wrapper">
+    <img class="rabbit-gif tenor-load" gif-id="<%= locals.path.tenor_gif %>" alt="Rabbit Gif">
+    <img class="tenor-footer" src="/img/tenor/PB_tenor_logo_blue_horizontal.svg" alt="Tenor Footer">
+  </div>
+  <div class="description">
+    <% var lines = path.body.split("\\n"); %>
+    <% for (var i = 0; i < lines.length; i++) { %>
+      <p><%= lines[i] %></p>
+    <% } %>
+    <div class="choice-wrapper">
+      <% for (var i = 0; i < snippets.length; i++) { %>
+        <% if (snippets[i]._id != -1) { %> 
+          <form action="/path/<%= snippets[i]._id %>" method="GET">
+            <button class="button choice" type="submit"><%= snippets[i].snippet %></button>
+          </form>
+        <% } else { %>
+          <form action="/create/<%= path._id %>" method="GET">
+            <button class="button choice create" type="submit"><%= snippets[i].snippet %></button>
+          </form>
+        <% } %> 
       <% } %>
-      </p>
-      <% if (path.is_leaf) { %>
-        <h2>The End</h2>
-      <% } %>
     </div>
-    <div class="snippets">
-      <form id="form" method="post" action="/path">
-        <input type="hidden" name="name" value="<%= user %>">
-        <input type="hidden" name="prev_id" value="<%= path._id %>">
-          <% for (var i = path.is_leaf * 3; i < snippets.length; i++) { %>
-            <input type="radio" id="rbtn<%= i %>" name="id" value="<%= snippets[i]._id %>" onclick="document.getElementById('form').submit();">
-            <label for="rbtn<%= i %>"><%= snippets[i].snippet %></label><br>
-          <% } %>
-      </form>
-    </div>
-    <div>
-      <p>
-        <div>ID: <%= locals.path._id %></div>
-        <div>You are <%= locals.user %></div>
-      </p>
-    </div>
-  </body>
-</html>
+    <p>Scene ID: <%= locals.path._id %></p>
+  </div>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="/js/path.js"></script>

@@ -1,24 +1,21 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-  <head>
-    <meta charset="utf-8">
-    <title>Rabbit Search</title>
-  </head>
-  <body>
-    <div class="error"><%= locals.err %></div>
-    <div class="title">
-      <h2>Rabbit Search Game</h2>
-      <p>Explore the paths of others, or create your own</p>
-    </div>
-    <div class="form">
-      <form method="POST" action="/path">
-        <label for="name">Name to label your creations</label><br>
-        <input type="text" id="name" name="name" value="Anonymous"><br>
-        <label for="id">Path Id (optional)</label><br>
-        <input type="text" id="id" name="id" value="0"><br><br>
-        <input type="submit" value="Submit">
-      </form>
-    </div>
-    <div class="total">There are a total of <%= locals.global_path_count-1 || 0 %> paths</div>
-  </body>
-</html>
+<div class="title">
+  <h1>Rabbit Search Game</h1>
+</div>
+<div class="description-wrapper">
+  <div class="rabbit-gif-wrapper">
+    <img class="rabbit-gif" src="https://media.tenor.com/Add9qffI-NgAAAAC/rabbit-stare.gif" alt="Rabbit Gif">
+    <img class="tenor-footer" src="/img/tenor/PB_tenor_logo_blue_horizontal.svg" alt="Tenor Footer">
+  </div>
+  <div class="description">
+    <p>
+      Choose your own adventure and build upon it! Your choices were built by players,
+      and you can continue the chain. Everyone starts on the same starting point. Every
+      scenario presents a short story, a fitting GIF, and three branching choices. Can
+      you explore them all?
+    </p>
+    <form action="/path/0" method="GET">
+      <button class="button" type="submit">Enter Rabbit Hole</button>
+    </form>
+    <p class="total">There are a total of <%= locals.scene_count-1 || 0 %> paths</p>
+  </div>
+</div>

@@ -1,254 +1,388 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const moment = require("moment");
-const fs = require('fs');
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
 require('dotenv').config();
-// const sqlite3 = require('sqlite3').verbose();
-// const aasqlite = require("./my_modules/aa-sqlite/aasqlite");
-
-const { Pool } = require('pg');
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
+var express = require('express');
+var expressLayout = require('express-ejs-layouts');
+var moment = require('moment');
+var bcrypt = require('bcrypt');
+var passport = require('passport');
+var flash = require('express-flash');
+var session = require('express-session');
+var initPassport = require('./my_modules/passport-config');
+var validateReg = require('./my_modules/validate-registration');
+var putil = require('./my_modules/path-utils');
+var Pool = require('pg').Pool;
+var pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
 });
-
-async function mainApp() {
-
-  var app = express();
-  var port = process.env.PORT || 5000;
-
-  // if (!fs.existsSync("./database")) {
-  //   fs.mkdirSync("./database");
-  //   fs.copyFileSync("./template.db", "./database/main.db");
-  // }
-
-  // const db = await aasqlite.open('./database/main.db', sqlite3.OPEN_READWRITE);
-  //create table branches if does not exist
-  // await aasqlite.run(db, ''
-  //   +'CREATE TABLE IF NOT EXISTS "branches" ('
-  //   +'"_id"	INTEGER,'
-  //   +'"parent_id"	INTEGER NOT NULL,'
-  //   +'"child_1_id"	INTEGER,'
-  //   +'"child_2_id"	INTEGER,'
-  //   +'"child_3_id"	INTEGER,'
-  //   +'"creator_id"	TEXT,'
-  //   +'"snippet"	TEXT NOT NULL,'
-  //   +'"body"	TEXT NOT NULL,'
-  //   +'"tenor_gif"	TEXT NOT NULL,'
-  //   +'"is_leaf"	INTEGER NOT NULL,'
-  //   +'"rating_pos"	INTEGER,'
-  //   +'"rating_neg"	INTEGER,'
-  //   +'"creation_time_epoch"	INTEGER,'
-  //   +'PRIMARY KEY("_id" AUTOINCREMENT)'
-  //   +');'
-  // );
-
-  //connects to database
-  const client = await pool.connect();
-
-  // var global_path_count = Object.values(await aasqlite.get(db, "SELECT COALESCE(MAX(_id)+1, 0) FROM branches"))[0];
-  var global_path_count = (await client.query(`SELECT COALESCE(MAX(_id)+1, 0) FROM branches`)).rows[0].coalesce;
-
-  console.log("Total paths: "+global_path_count);
-
-  // const db_insert = 'INSERT INTO branches ('
-  //   + '_id, parent_id, creator_id, snippet,'
-  //   + 'tenor_gif, body, is_leaf, rating_pos, rating_neg, creation_time_epoch) '
-  //   + 'VALUES(?,?,?,?,?,?,?,?,?,?)';
-
-  // db.run(db_insert, [1, 1, "The First", "The First", "https://c.tenor.com/y-mhvsb2nTMAAAAd/nice-day-our-earth.gif", "You are lost<br>You see a tree, a rock, and a waterfall on the distance<br>What do you do?", 0, 69000, 0, new Date().getTime()], (err) => {
-  //   if (err) return console.log(err.message);
-  //
-  //   console.log("a new row has been created");
-  // });
-
-
-  app.set('view engine', 'ejs');
-
-  app.use('/public', express.static(__dirname + '/public'));
-  app.use(bodyParser.urlencoded({ extended: false }));
-  app.use((req, res, next)=>{
-    res.locals.moment = moment;
-    next();
-  });
-
-  // res.render("path", {text: "hello"});
-  //<%= text %>
-  //<% locals.text || 'Default' %>
-  app.get(['/', '/path', '/create'], function(req, res) {
-    res.render("home", {global_path_count: global_path_count});
-  });
-
-  app.post('/path', async function (req, res) {
-    var user = req.body.name || "Anonymous";
-    var id = req.body.id || 0;
-    var prev_id = req.body.prev_id;
-
-    var error = await (async function() {
-      if (user.length > 15)
-        return `Error: user cannot exceed 15 characters!`;
-
-      if (isNaN(Number(id)) || Number(id) < 0 || Number(id) >= global_path_count)
-        return `Error: path id=${id} does not exist!`;
-
-      //success, no errors
-      return null;
-    })();
-
-    if (error != null) {
-      res.render("home", { err: error, global_path_count: global_path_count});
-      return;
-    }
-
-    // var current_path = await aasqlite.get(db, 'SELECT * FROM branches WHERE _id = ?', [id]);
-    var current_path = (await client.query('SELECT * FROM branches WHERE _id = $1', [id])).rows[0];
-
-    //flag to create a new branch
-    if (prev_id == id) {
-      res.render("create", {user: user, parent_path: current_path});
-      return;
-    }
-    //snippets with id equal to their parent is a flag to a create new branch
-    var default_snippet = {_id: current_path._id, snippet: "[Empty Slot] Create your action"};
-    var return_snippet = {_id: current_path.parent_id, snippet: "Go Back!"};
-
-    var snippets = [ default_snippet, default_snippet, default_snippet];
-    if (current_path._id != 0) snippets.push(return_snippet); //only add return snippet if path is not root
-
-    // var snippets_fetched = await aasqlite.all(db, 'SELECT _id,snippet FROM branches WHERE _id IN (?,?,?)', [
-    //   current_path.child_1_id || -1, current_path.child_2_id || -1, current_path.child_3_id || -1 ]);
-
-    var snippets_fetched = (await client.query('SELECT _id,snippet FROM branches WHERE _id IN ($1,$2,$3)', [
-      current_path.child_1_id || -1, current_path.child_2_id || -1, current_path.child_3_id || -1 ])).rows;
-
-    for (var i = 0; i < snippets_fetched.length; i++)
-      snippets[i] = snippets_fetched[i];
-
-    res.render("path", { user: user, path: current_path, snippets: snippets});
-  });
-
-  app.post('/create', async function (req, res) {
-    var parent_id = req.body.parent_id || "0";
-    var user = req.body.creator_id || "Anonymous";
-    var snippet = req.body.snippet || "";
-    var body = req.body.body || "";
-    var tenor_gif = req.body.tenor_gif || "";
-    var is_leaf = req.body.is_leaf || "0";
-
-    //remove double spaces in string
-    user = user.trim().replace(/\s{2,}/g, ' ');
-    snippet = snippet.trim().replace(/\s{2,}/g, ' ');
-    body = body.replace(/^[ ]+|[ ]+$/mg, '').replace(/[ ]{2,}/g, ' ')
-                .replace(/[\r\n\t\f\v]{3,}/g, '\\n\\n').replace(/[\r\n\t\f\v]+/g, '\\n');
-    tenor_gif = tenor_gif.trim().replace(/\s{2,}/g, ' ');
-
-    var parent_path;
-    var free_child;
-
-    var error = await (async function() {
-      if (isNaN(Number(parent_id)) || Number(parent_id) < 0  || Number(parent_id) >= global_path_count)
-        parent_id = "0"; //not an error because parent_path must exist for error page to load
-
-      // parent_path = await aasqlite.get(db, 'SELECT * FROM branches WHERE _id = ?', [parent_id]);
-      parent_path = (await client.query('SELECT * FROM branches WHERE _id = $1', [parent_id])).rows[0];
-
-      if (snippet == "" || body == "" || tenor_gif == "")
-        return `Error: At least one of the fields is empty!`;
-
-      if (snippet.length < 5 || snippet.length > 40)
-        return `Error: Snippet length must be between 5 and 40 characters!`;
-
-      if (body.length < 80 || body.length > 3000)
-        return `Error: Body length must be between 80 and 3000 characters!`;
-
-      if (!tenor_gif.startsWith("https://c.tenor.com") || !tenor_gif.endsWith(".gif"))
-        return `Error: Tenor Gif is invalid! (source must be from tenor.com)`;
-
-      if (parent_path.is_leaf == 1)
-        return `Error: The parent path cannot be continued! (it was a finale)`;
-
-      var has_free_child = (function() {
-        for (var i = 1; i <= 3; i++) {
-          free_child = `child_${i}_id`;
-          if (parent_path[free_child] == null)
-            return true;
+//https://github.com/Jinzulen/TenorJS
+var Tenor = require("tenorjs").client({
+    "Key": process.env.TENOR_KEY,
+    "Filter": "off",
+    "Locale": "en_US",
+    "MediaFilter": "minimal",
+    "DateFormat": "D/MM/YYYY - H:mm:ss A" // Change this accordingly
+});
+var TenorIdsExists = function (id) {
+    return new Promise(function (Resolve, Reject) {
+        Tenor.Search.Find(id)
+            .then(function () { return Resolve(true); })["catch"](function () { return Resolve(false); });
+    });
+};
+var app = express();
+var port = process.env.PORT || 5000;
+function mainApp() {
+    return __awaiter(this, void 0, void 0, function () {
+        function checkAuthenticated(req, res, next) {
+            if (req.isAuthenticated())
+                return next();
+            res.redirect('/login');
         }
-        return false; //no free children
-      })();
-
-      if (!has_free_child)
-        return `Error: Someone beat you to it, all children of parent path id=${parent_id} are filled!`;
-
-      //sucess, no errors
-      return null;
-    })();
-
-    if (error != null) {
-      res.render("create", {user: user, parent_path: parent_path, current_path: req.body, err: error});
-      return;
-    }
-
-    var current_id = global_path_count++; //get current global_path_count, then increment
-    var now = new Date().getTime();
-
-    //inserts new path on database and update parent's child entry
-    var values = [current_id, parent_id, user, snippet, body, tenor_gif, is_leaf, now];
-
-    // await aasqlite.run(db, 'INSERT INTO branches (_id, parent_id,creator_id,snippet,body,tenor_gif,is_leaf,creation_time_epoch) VALUES(?,?,?,?,?,?,?,?);', values);
-    // await aasqlite.run(db, `UPDATE branches SET ${free_child} = ? WHERE _id = ?`, [current_id, parent_id]);
-    await client.query('INSERT INTO branches (_id, parent_id,creator_id,snippet,body,tenor_gif,is_leaf,creation_time_epoch) VALUES($1,$2,$3,$4,$5,$6,$7,$8);', values);
-    await client.query(`UPDATE branches SET ${free_child} = $1 WHERE _id = $2`, [current_id, parent_id]);
-
-
-    console.log(`Created path=${current_id}: ${snippet}`);
-
-    //sends user to parent path
-    // var current_path = await aasqlite.get(db, 'SELECT * FROM branches WHERE _id = ?', [current_id]);
-    var current_path = (await client.query('SELECT * FROM branches WHERE _id = $1', [current_id])).rows[0];
-
-    //snippets with id equal to their parent is a flag to a create new branch
-    var default_snippet = {_id: current_path._id, snippet: "[Empty Slot] Create your action"};
-    var return_snippet = {_id: current_path.parent_id, snippet: "Go Back!"};
-
-    var snippets = [ default_snippet, default_snippet, default_snippet];
-    if (current_path._id != 0) snippets.push(return_snippet); //only add return snippet if path is not root
-
-    // var snippets_fetched = await aasqlite.all(db, 'SELECT _id,snippet FROM branches WHERE _id IN (?,?,?)', [
-    //   current_path.child_1_id || -1, current_path.child_2_id || -1, current_path.child_3_id || -1 ]);
-    var snippets_fetched = (await client.query('SELECT _id,snippet FROM branches WHERE _id IN ($1,$2,$3)', [
-      current_path.child_1_id || -1, current_path.child_2_id || -1, current_path.child_3_id || -1 ])).rows;
-
-    for (var i = 0; i < snippets_fetched.length; i++)
-      snippets[i] = snippets_fetched[i];
-
-    res.render("path", { user: user, path: current_path, snippets: snippets});
-
-  });
-
-  process.on('exit', function(code) {
-    console.log("Shutting down server...");
-    client.release();
-    // db.close();
-    console.log("Database saved!");
-  });
-
-  //handles ctrl+c
-  process.on("SIGINT", function() {
-    process.exit();
-  });
-
-  // tty.setRawMode(true);
-
-  app.listen(port);
-  console.log(`Server running on port ${port}`);
+        function checkNotAuthenticated(req, res, next) {
+            if (!req.isAuthenticated())
+                return next();
+            res.redirect('/');
+        }
+        var client, scene_count;
+        var _this = this;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, pool.connect()];
+                case 1:
+                    client = _a.sent();
+                    return [4 /*yield*/, client.query("SELECT COALESCE(MAX(_id)+1, 0) FROM branches")];
+                case 2:
+                    scene_count = (_a.sent()).rows.pop().coalesce;
+                    console.log("Total paths: " + scene_count);
+                    initPassport(passport, function (email) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0: return [4 /*yield*/, client.query('SELECT * FROM users WHERE email = $1', [email])];
+                            case 1: return [2 /*return*/, (_a.sent()).rows.pop()];
+                        }
+                    }); }); }, function (id) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0: return [4 /*yield*/, client.query('SELECT * FROM users WHERE id = $1', [id])];
+                            case 1: return [2 /*return*/, (_a.sent()).rows.pop()];
+                        }
+                    }); }); });
+                    //Static Files
+                    app.use(express.static('public'));
+                    app.use('/img', express.static(__dirname + 'public/img'));
+                    app.use('/css', express.static(__dirname + 'public/css'));
+                    app.use('/js', express.static(__dirname + 'public/js'));
+                    //Templating Engine
+                    app.set('view engine', 'ejs');
+                    //Middleware Configuration
+                    app.use(expressLayout);
+                    app.use(express.urlencoded({ extended: false }));
+                    app.use(flash());
+                    app.use(session({
+                        secret: process.env.SESSION_SECRET,
+                        resave: false,
+                        saveUninitialized: false
+                    }));
+                    app.use(passport.initialize());
+                    app.use(passport.session());
+                    app.use(function (req, res, next) {
+                        res.____render____ = res.render;
+                        res.render = function (view, options, fn) {
+                            res.locals.filename = view.split('\\').pop().split('/').pop();
+                            res.____render____(view, options, fn);
+                        };
+                        next();
+                    });
+                    app.use(function (req, res, next) {
+                        res.locals.user = req.user;
+                        res.locals.moment = moment;
+                        res.locals.scene_count = scene_count;
+                        if (req.isAuthenticated()) {
+                            res.locals.user = {
+                                username: req.user.username
+                            };
+                        }
+                        next();
+                    });
+                    app.get('/', function (req, res) {
+                        res.render("home");
+                    });
+                    app.get('/login', checkNotAuthenticated, function (req, res) {
+                        res.render("login");
+                    });
+                    app.get('/register', checkNotAuthenticated, function (req, res) {
+                        res.render("register");
+                    });
+                    app.get('/account', checkAuthenticated, function (req, res) {
+                        res.render("account");
+                    });
+                    app.get('/logout', function (req, res) {
+                        res.redirect('/account');
+                    });
+                    app.get('/path/:id(\\d+)', function (req, res) {
+                        return __awaiter(this, void 0, void 0, function () {
+                            var id, path, default_snippet, return_snippet, snippets, snippets_fetched, i;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        id = parseInt(req.params.id);
+                                        return [4 /*yield*/, client.query('SELECT * FROM branches WHERE _id = $1', [id])];
+                                    case 1:
+                                        path = (_a.sent()).rows.pop();
+                                        if (!path) {
+                                            return [2 /*return*/, res.redirect('/path/0')];
+                                        }
+                                        default_snippet = { _id: -1, snippet: "Create your action" };
+                                        return_snippet = { _id: path.parent_id, snippet: "Go Back!" };
+                                        snippets = [default_snippet, default_snippet, default_snippet];
+                                        if (path._id != 0)
+                                            snippets.push(return_snippet); //only add return snippet if path is not root
+                                        return [4 /*yield*/, client.query('SELECT _id,snippet FROM branches WHERE _id IN ($1,$2,$3)', [
+                                                path.child_1_id || -1, path.child_2_id || -1, path.child_3_id || -1
+                                            ])];
+                                    case 2:
+                                        snippets_fetched = (_a.sent()).rows;
+                                        for (i = 0; i < snippets_fetched.length; i++)
+                                            snippets[i] = snippets_fetched[i];
+                                        res.render("path", { path: path, snippets: snippets });
+                                        return [2 /*return*/];
+                                }
+                            });
+                        });
+                    });
+                    app.get('/create/:id(\\d+)', checkAuthenticated, function (req, res) {
+                        return __awaiter(this, void 0, void 0, function () {
+                            var parent_id, parent_path, error;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        parent_id = parseInt(req.params.id);
+                                        return [4 /*yield*/, client.query('SELECT * FROM branches WHERE _id = $1', [parent_id])];
+                                    case 1:
+                                        parent_path = (_a.sent()).rows.pop();
+                                        if (!parent_path) {
+                                            return [2 /*return*/, res.redirect('/')];
+                                        }
+                                        error = (function () {
+                                            if (putil.NextFreeChild(parent_path) == 0)
+                                                return 'There are no more children available!';
+                                            return null;
+                                        })();
+                                        if (error) {
+                                            return [2 /*return*/, res.redirect('/path/' + parent_id)];
+                                        }
+                                        res.render("create", { parent_path: parent_path });
+                                        return [2 /*return*/];
+                                }
+                            });
+                        });
+                    });
+                    // non-standalone paths
+                    app.get('/guidelines', function (req, res) {
+                        res.render('guidelines');
+                    });
+                    app.get(['/path', '/create'], function (req, res) {
+                        res.redirect('/');
+                    });
+                    //User Registration
+                    app.post('/register', checkNotAuthenticated, function (req, res) {
+                        return __awaiter(this, void 0, void 0, function () {
+                            var uname, email, rawPwd, error, hashPassword, values, err_1;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        uname = req.body.username;
+                                        email = req.body.email;
+                                        rawPwd = req.body.password;
+                                        error = validateReg(email, uname, rawPwd);
+                                        if (error != null)
+                                            return [2 /*return*/, res.render("register", { error: error })];
+                                        _a.label = 1;
+                                    case 1:
+                                        _a.trys.push([1, 4, , 5]);
+                                        return [4 /*yield*/, bcrypt.hash(rawPwd, 10)];
+                                    case 2:
+                                        hashPassword = _a.sent();
+                                        values = [uname, email, hashPassword];
+                                        return [4 /*yield*/, client.query('INSERT INTO users (username, email, password) VALUES($1,$2,$3);', values)];
+                                    case 3:
+                                        _a.sent();
+                                        res.redirect('/login');
+                                        return [3 /*break*/, 5];
+                                    case 4:
+                                        err_1 = _a.sent();
+                                        res.redirect('/register');
+                                        return [3 /*break*/, 5];
+                                    case 5: return [2 /*return*/];
+                                }
+                            });
+                        });
+                    });
+                    app.post('/login', checkNotAuthenticated, passport.authenticate('local', {
+                        successRedirect: '/',
+                        failureRedirect: '/login',
+                        failureFlash: true
+                    }));
+                    app.post('/logout', checkAuthenticated, function (req, res, next) {
+                        req.logOut(function (err) {
+                            if (err)
+                                return next(err);
+                        });
+                        res.redirect('/login');
+                    });
+                    app.post('/create/:id(\\d+)', checkAuthenticated, function (req, res) {
+                        return __awaiter(this, void 0, void 0, function () {
+                            function delay(ms) {
+                                return new Promise(function (resolve) { return setTimeout(resolve, ms); });
+                            }
+                            var user, parent_id, parent_path, path, freeChild, error, values, _a;
+                            return __generator(this, function (_b) {
+                                switch (_b.label) {
+                                    case 0:
+                                        user = req.user;
+                                        parent_id = parseInt(req.params.id);
+                                        return [4 /*yield*/, client.query('SELECT * FROM branches WHERE _id = $1', [parent_id])];
+                                    case 1:
+                                        parent_path = (_b.sent()).rows.pop();
+                                        path = {
+                                            _id: -1,
+                                            parent_id: parent_id,
+                                            creator_id: user.id,
+                                            creator_name: user.username,
+                                            snippet: req.body.snippet,
+                                            body: req.body.body,
+                                            tenor_gif: parseInt(req.body.tenor_gif),
+                                            time: new Date().getTime()
+                                        };
+                                        //remove double spaces in string
+                                        path.snippet = path.snippet.trim().replace(/\s{2,}/g, ' ');
+                                        path.body = path.body.replace(/^[ ]+|[ ]+$/mg, '')
+                                            .replace(/[ ]{2,}/g, ' ')
+                                            .replace(/[\r\n\t\f\v]+/g, '\\n');
+                                        freeChild = putil.NextFreeChild(parent_path);
+                                        return [4 /*yield*/, (function () {
+                                                return __awaiter(this, void 0, void 0, function () {
+                                                    var _a;
+                                                    return __generator(this, function (_b) {
+                                                        switch (_b.label) {
+                                                            case 0:
+                                                                if (freeChild == null)
+                                                                    return [2 /*return*/, "There are no more children available for parent path id = " + parent_id + "!"];
+                                                                if (path.snippet == "" || path.body == "")
+                                                                    return [2 /*return*/, "Error: At least one of the fields is empty!"];
+                                                                if (path.snippet.length < 5 || path.snippet.length > 40)
+                                                                    return [2 /*return*/, "Error: Title length must be between 5 and 40 characters!"];
+                                                                if (path.body.length < 80 || path.body.length > 3000)
+                                                                    return [2 /*return*/, "Error: Description length must be between 80 and 3000 characters!"];
+                                                                _a = path.tenor_gif == NaN;
+                                                                if (_a) return [3 /*break*/, 2];
+                                                                return [4 /*yield*/, TenorIdsExists([path.tenor_gif + ''])];
+                                                            case 1:
+                                                                _a = !(_b.sent());
+                                                                _b.label = 2;
+                                                            case 2:
+                                                                if (_a)
+                                                                    return [2 /*return*/, "Error: Tenor GIF ID is invalid!"];
+                                                                return [2 /*return*/, null];
+                                                        }
+                                                    });
+                                                });
+                                            })()];
+                                    case 2:
+                                        error = _b.sent();
+                                        if (error) {
+                                            return [2 /*return*/, res.render('create', { parent_path: parent_path, error: error })];
+                                        }
+                                        values = [path.parent_id, path.creator_id, path.creator_name, path.snippet, path.body, path.tenor_gif, path.time];
+                                        _a = path;
+                                        return [4 /*yield*/, client.query('INSERT INTO branches (parent_id,creator_id,creator_name,snippet,body,tenor_gif,creation_time_epoch) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING _id', values)];
+                                    case 3:
+                                        _a._id = (_b.sent()).rows.pop()._id;
+                                        return [4 /*yield*/, client.query("UPDATE branches SET " + freeChild + " = $1 WHERE _id = $2", [path._id, parent_id])];
+                                    case 4:
+                                        _b.sent();
+                                        return [4 /*yield*/, delay(1000)];
+                                    case 5:
+                                        _b.sent();
+                                        //inserts new path on database and update parent's child entry
+                                        res.redirect('/path/' + path._id);
+                                        return [2 /*return*/];
+                                }
+                            });
+                        });
+                    });
+                    //   console.log(`Created path=${current_id}: ${snippet}`);
+                    //   //sends user to parent path
+                    //   // var current_path = await aasqlite.get(db, 'SELECT * FROM branches WHERE _id = ?', [current_id]);
+                    //   var current_path = (await client.query('SELECT * FROM branches WHERE _id = $1', [current_id])).rows.pop();
+                    //   //snippets with id equal to their parent is a flag to a create new branch
+                    //   var default_snippet = {_id: current_path._id, snippet: "[Empty Slot] Create your action"};
+                    //   var return_snippet = {_id: current_path.parent_id, snippet: "Go Back!"};
+                    //   var snippets = [ default_snippet, default_snippet, default_snippet];
+                    //   if (current_path._id != 0) snippets.push(return_snippet); //only add return snippet if path is not root
+                    //   // var snippets_fetched = await aasqlite.all(db, 'SELECT _id,snippet FROM branches WHERE _id IN (?,?,?)', [
+                    //   //   current_path.child_1_id || -1, current_path.child_2_id || -1, current_path.child_3_id || -1 ]);
+                    //   var snippets_fetched = (await client.query('SELECT _id,snippet FROM branches WHERE _id IN ($1,$2,$3)', [
+                    //     current_path.child_1_id || -1, current_path.child_2_id || -1, current_path.child_3_id || -1 ])).rows;
+                    //   for (var i = 0; i < snippets_fetched.length; i++)
+                    //     snippets[i] = snippets_fetched[i];
+                    //   res.render("path", { user: user, path: current_path, snippets: snippets});
+                    // });
+                    process.on('exit', function (code) {
+                        console.log("Shutting down server...");
+                        client.release();
+                        // db.close();
+                        console.log("Database saved!");
+                    });
+                    //handles ctrl+c
+                    process.on("SIGINT", function () {
+                        process.exit();
+                    });
+                    // tty.setRawMode(true);
+                    app.listen(port);
+                    console.log("Server running on port " + port);
+                    return [2 /*return*/];
+            }
+        });
+    });
 }
-
-mainApp().catch((error) => {
-  console.error(error);
-});;
-
+mainApp()["catch"](function (error) {
+    console.error(error);
+});
+;
 // db.close(sqlite3.OPEN_READWRITE, (err) => {
 //   if (err) return console.log(err.message);
 // });

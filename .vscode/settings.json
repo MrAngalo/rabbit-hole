@@ -1,0 +1,11 @@
+{
+    "compile-hero.disable-compile-files-on-did-save-code": false,
+    "compile-hero.typescriptx-output-directory": ".",
+    "compile-hero.typescript-output-directory": ".",
+    "compile-hero.sass-output-directory": ".",
+    "compile-hero.scss-output-directory": ".",
+    "files.exclude": {
+        "**/*.css": true,
+        "**/*.js": true,
+    },
+}
