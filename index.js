@@ -214,8 +214,14 @@ function mainApp() {
                     app.get('/guidelines', function (req, res) {
                         res.render('guidelines');
                     });
-                    app.get(['/path', '/create'], function (req, res) {
-                        res.redirect('/');
+                    app.post(['/path', '/create'], function (req, res) {
+                        var id = req.body.id || '0';
+                        if (id.match(/\d+/)) {
+                            res.redirect(req.url + '/' + id);
+                        }
+                        else {
+                            res.redirect('/');
+                        }
                     });
                     //User Registration
                     app.post('/register', checkNotAuthenticated, function (req, res) {

@@ -168,10 +168,15 @@ async function mainApp() {
     res.render('guidelines');
   });
 
-  app.get(['/path', '/create'], function (req, res) {
-    res.redirect('/');
+  app.post(['/path', '/create'], function(req, res) {
+    var id:string = req.body.id || '0';
+    if (id.match(/\d+/)) {
+      res.redirect(req.url+'/'+id);
+    } else {
+      res.redirect('/');
+    }
   });
-  
+
   //User Registration
   app.post('/register', checkNotAuthenticated, async function (req, res) {
     var uname:string = req.body.username;
