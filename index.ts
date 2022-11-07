@@ -9,6 +9,7 @@ const session = require('express-session');
 const initPassport = require('./my_modules/passport-config');
 const validateReg = require('./my_modules/validate-registration');
 const putil = require('./my_modules/path-utils');
+//https://www.npmjs.com/package/connect-pg-simple
 
 const { Pool } = require('pg');
 const pool = new Pool({
@@ -61,9 +62,14 @@ async function mainApp() {
   app.use(express.urlencoded({ extended: false }));
   app.use(flash());
   app.use(session({
+    store: new (require('connect-pg-simple')(session))({
+      pool: pool,
+      createTableIfMissing: true
+    }),
     secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    cookie: { maxAge: 4 * 60 * 1000 } // 4 hours
   }));
   app.use(passport.initialize());
   app.use(passport.session());

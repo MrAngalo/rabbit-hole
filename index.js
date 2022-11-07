@@ -45,6 +45,7 @@ var session = require('express-session');
 var initPassport = require('./my_modules/passport-config');
 var validateReg = require('./my_modules/validate-registration');
 var putil = require('./my_modules/path-utils');
+//https://www.npmjs.com/package/connect-pg-simple
 var Pool = require('pg').Pool;
 var pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -112,9 +113,14 @@ function mainApp() {
                     app.use(express.urlencoded({ extended: false }));
                     app.use(flash());
                     app.use(session({
+                        store: new (require('connect-pg-simple')(session))({
+                            pool: pool,
+                            createTableIfMissing: true
+                        }),
                         secret: process.env.SESSION_SECRET,
                         resave: false,
-                        saveUninitialized: false
+                        saveUninitialized: false,
+                        cookie: { maxAge: 4 * 60 * 1000 } // 4 hours
                     }));
                     app.use(passport.initialize());
                     app.use(passport.session());
