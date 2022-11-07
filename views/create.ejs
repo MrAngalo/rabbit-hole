@@ -80,7 +80,7 @@
       </p>
       <div class="input-wrapper">
           <label for="body"><b>Desc:</b></label>
-          <textarea id="body" name="body" placeholder="You decided to..." required><%= (locals.path || {}).body %></textarea><br>
+          <textarea id="body" name="body" placeholder="You decided to..." required onload="this.value = this.value;"><%= (locals.path || {}).body %></textarea><br>
       </div>
     </div>
   </div>
@@ -110,7 +110,7 @@
       </p>
       <div class="input-wrapper">
         <label for="tenor_gif"><b>GIF ID:</b></label>
-        <input type="text" id="tenor_gif" name="tenor_gif" placeholder="23616422" required>
+        <input type="text" id="tenor_gif" name="tenor_gif" placeholder="23616422" value="<%= (locals.path || {}).tenor_gif %>" required>
       </div>
       <p>You are all done! Make sure to review before you submit!</p>
       <div class="tos-wrapper">

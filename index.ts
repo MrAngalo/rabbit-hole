@@ -69,7 +69,7 @@ async function mainApp() {
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 4 * 60 * 1000 } // 4 hours
+    cookie: { maxAge: 4 * 60 * 60 * 1000 } // 4 hours
   }));
   app.use(passport.initialize());
   app.use(passport.session());
@@ -234,8 +234,8 @@ async function mainApp() {
     };
 
     //remove double spaces in string
-    path.snippet = path.snippet.trim().replace(/\s{2,}/g, ' ');
-    path.body = path.body.replace(/^[ ]+|[ ]+$/mg, '')
+    var snippet = path.snippet.trim().replace(/\s{2,}/g, ' ');
+    var body = path.body.replace(/^[ ]+|[ ]+$/mg, '')
       .replace(/[ ]{2,}/g, ' ')
       .replace(/[\r\n\t\f\v]+/g, '\\n');
 
@@ -245,13 +245,13 @@ async function mainApp() {
       if (freeChild == null)
         return `There are no more children available for parent path id = ${parent_id}!`;
       
-      if (path.snippet == "" || path.body == "")
+      if (snippet == "" || body == "")
         return `Error: At least one of the fields is empty!`;
         
-      if (path.snippet.length < 5 || path.snippet.length > 40)
+      if (snippet.length < 5 || snippet.length > 40)
         return `Error: Title length must be between 5 and 40 characters!`;
 
-      if (path.body.length < 80 || path.body.length > 3000)
+      if (body.length < 80 || body.length > 3000)
         return `Error: Description length must be between 80 and 3000 characters!`;
 
       if (path.tenor_gif == NaN || !(await TenorIdsExists([path.tenor_gif+''])))
@@ -261,8 +261,11 @@ async function mainApp() {
     })();
 
     if (error) {
-      return res.render('create', { parent_path, error });
+      return res.render('create', { error, path, parent_path });
     }
+
+    path.snippet = snippet;
+    path.body = body;
 
     var values = [path.parent_id, path.creator_id, path.creator_name, path.snippet, path.body, path.tenor_gif, path.time];
 

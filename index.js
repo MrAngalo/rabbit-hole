@@ -120,7 +120,7 @@ function mainApp() {
                         secret: process.env.SESSION_SECRET,
                         resave: false,
                         saveUninitialized: false,
-                        cookie: { maxAge: 4 * 60 * 1000 } // 4 hours
+                        cookie: { maxAge: 4 * 60 * 60 * 1000 } // 4 hours
                     }));
                     app.use(passport.initialize());
                     app.use(passport.session());
@@ -280,7 +280,7 @@ function mainApp() {
                             function delay(ms) {
                                 return new Promise(function (resolve) { return setTimeout(resolve, ms); });
                             }
-                            var user, parent_id, parent_path, path, freeChild, error, values, _a;
+                            var user, parent_id, parent_path, path, snippet, body, freeChild, error, values, _a;
                             return __generator(this, function (_b) {
                                 switch (_b.label) {
                                     case 0:
@@ -299,9 +299,8 @@ function mainApp() {
                                             tenor_gif: parseInt(req.body.tenor_gif),
                                             time: new Date().getTime()
                                         };
-                                        //remove double spaces in string
-                                        path.snippet = path.snippet.trim().replace(/\s{2,}/g, ' ');
-                                        path.body = path.body.replace(/^[ ]+|[ ]+$/mg, '')
+                                        snippet = path.snippet.trim().replace(/\s{2,}/g, ' ');
+                                        body = path.body.replace(/^[ ]+|[ ]+$/mg, '')
                                             .replace(/[ ]{2,}/g, ' ')
                                             .replace(/[\r\n\t\f\v]+/g, '\\n');
                                         freeChild = putil.NextFreeChild(parent_path);
@@ -313,11 +312,11 @@ function mainApp() {
                                                             case 0:
                                                                 if (freeChild == null)
                                                                     return [2 /*return*/, "There are no more children available for parent path id = " + parent_id + "!"];
-                                                                if (path.snippet == "" || path.body == "")
+                                                                if (snippet == "" || body == "")
                                                                     return [2 /*return*/, "Error: At least one of the fields is empty!"];
-                                                                if (path.snippet.length < 5 || path.snippet.length > 40)
+                                                                if (snippet.length < 5 || snippet.length > 40)
                                                                     return [2 /*return*/, "Error: Title length must be between 5 and 40 characters!"];
-                                                                if (path.body.length < 80 || path.body.length > 3000)
+                                                                if (body.length < 80 || body.length > 3000)
                                                                     return [2 /*return*/, "Error: Description length must be between 80 and 3000 characters!"];
                                                                 _a = path.tenor_gif == NaN;
                                                                 if (_a) return [3 /*break*/, 2];
@@ -336,8 +335,10 @@ function mainApp() {
                                     case 2:
                                         error = _b.sent();
                                         if (error) {
-                                            return [2 /*return*/, res.render('create', { parent_path: parent_path, error: error })];
+                                            return [2 /*return*/, res.render('create', { error: error, path: path, parent_path: parent_path })];
                                         }
+                                        path.snippet = snippet;
+                                        path.body = body;
                                         values = [path.parent_id, path.creator_id, path.creator_name, path.snippet, path.body, path.tenor_gif, path.time];
                                         _a = path;
                                         return [4 /*yield*/, client.query('INSERT INTO branches (parent_id,creator_id,creator_name,snippet,body,tenor_gif,creation_time_epoch) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING _id', values)];
